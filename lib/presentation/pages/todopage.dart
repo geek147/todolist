@@ -1,4 +1,3 @@
-// lib/presentation/pages/task_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:todolist/domain/entities/todo.dart';
@@ -48,29 +47,72 @@ class _TodoPageState extends State<TodoPage> {
               itemCount: state.filteredTodos.length,
               itemBuilder: (context, index) {
                 final task = state.filteredTodos[index];
-                return ListTile(
-                  title: Text(
-                    task.title,
-                    style: TextStyle(
-                      decoration: task.isCompleted
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
+                return Dismissible(
+                  key: Key(task.id), // Unique key for each item
+                  background: Card(
+                    margin:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: const Icon(Icons.delete, color: Colors.white),
                     ),
                   ),
-                  trailing: Checkbox(
-                    value: task.isCompleted,
-                    onChanged: (value) {
-                      context.read<TodoBloc>().add(UpdateTodoEvent(
-                            Todo(
-                                id: task.id,
-                                title: task.title,
-                                isCompleted: value!),
-                          ));
-                    },
-                  ),
-                  onLongPress: () {
+                  direction: DismissDirection.endToStart,
+                  confirmDismiss: (direction) async {
+                    return await showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Confirm"),
+                          content: const Text(
+                              "Are you sure you want to delete this item?"),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text("Delete"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  onDismissed: (direction) {
                     context.read<TodoBloc>().add(RemoveTodoEvent(task.id));
                   },
+                  child: Card(
+                    margin:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    color: Colors.purple,
+                    child: ListTile(
+                      title: Text(
+                        task.title,
+                        style: TextStyle(
+                          color: Colors.white,
+                          decoration: task.isCompleted
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                        ),
+                      ),
+                      trailing: Checkbox(
+                        value: task.isCompleted,
+                        onChanged: (value) {
+                          context.read<TodoBloc>().add(UpdateTodoEvent(
+                                Todo(
+                                  id: task.id,
+                                  title: task.title,
+                                  isCompleted: value!,
+                                ),
+                              ));
+                        },
+                      ),
+                    ),
+                  ),
                 );
               },
             );
